@@ -1,0 +1,772 @@
+'use client';
+import React, { useEffect, useState } from 'react';
+import { 
+  Plus, 
+  Users, 
+  FileText, 
+  Copy,
+  Check,
+  AlertCircle,
+  Briefcase,
+  ExternalLink,
+  ToggleLeft,
+  ToggleRight,
+  Edit3,
+  Trash2,
+  User,
+  RefreshCw,
+  Target,
+  Filter
+} from 'lucide-react';
+import { useCareersStore } from '@/stores/careersStore';
+import { useAuthStore } from '@/stores/authStore';
+import { useAppStore } from '@/stores/appStore';
+import { useUserSessionStore } from '@/stores/userSessionStore';
+import { JobPostingListItem } from '@/lib/types';
+import { api } from '@/lib/api';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card-enhanced';
+import { Button } from '@/components/ui/button-enhanced';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LoadingCard } from '@/components/ui/loading';
+import { AdminOnly } from '@/components/auth/RoleBasedAccess';
+import JobPostingForm from './JobPostingForm';
+import ApplicationsList from './ApplicationsList';
+
+export default function CareersPage() {
+  const { user } = useAuthStore();
+  const {
+    jobPostings,
+    isLoading,
+    error,
+    loadJobPostings,
+    updateJobStatus,
+    selectJob,
+    selectedJob,
+    matchJobCandidates
+  } = useCareersStore();
+  const { setCurrentTab, setMatchingProgress, setLoading: setAppLoading } = useAppStore();
+  
+  // User session store for isolated state management
+  const {
+    loadingStates,
+    setLoading,
+    queueRequest,
+    clearUserData
+  } = useUserSessionStore();
+  
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingJob, setEditingJob] = useState<JobPostingListItem | null>(null);
+  const [editingJobData, setEditingJobData] = useState<any>(null);
+  const [isLoadingEditData, setIsLoadingEditData] = useState(false);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isMatching, setIsMatching] = useState(false);
+  const [isDeletingJob, setIsDeletingJob] = useState<string | null>(null);
+  const [showJobDeleteConfirm, setShowJobDeleteConfirm] = useState<JobPostingListItem | null>(null);
+  const [jobFilter, setJobFilter] = useState<'all' | 'yours' | 'others'>('all');
+
+  useEffect(() => {
+    // Use user session store for request queuing
+    queueRequest('load-job-postings', async () => {
+      setLoading('careers', true);
+      try {
+        await loadJobPostings();
+      } finally {
+        setLoading('careers', false);
+      }
+    });
+  }, [loadJobPostings, queueRequest, setLoading]);
+
+
+  const handleToggleStatus = async (jobId: string, currentStatus: boolean) => {
+    await updateJobStatus(jobId, !currentStatus);
+  };
+
+  const handleSelectJob = (job: JobPostingListItem) => {
+    selectJob(job);
+  };
+
+  const handleCloseJobDetails = () => {
+    selectJob(null);
+  };
+
+  const handleDeleteAllJobPostings = async () => {
+    setIsDeletingAll(true);
+    try {
+      const response = await api.deleteAllJobPostings();
+      if (response.success) {
+        await loadJobPostings();
+        alert(`Successfully deleted all job postings!\n\nDetails:\n- Job postings deleted: ${response.details.job_postings_deleted}\n- JD documents deleted: ${response.details.jd_documents_deleted}\n- JD structured data deleted: ${response.details.jd_structured_deleted}\n- JD embeddings deleted: ${response.details.jd_embeddings_deleted}\n- CVs preserved: ${response.details.cvs_preserved}`);
+      } else {
+        alert('Failed to delete job postings. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('Failed to delete all job postings:', error);
+      // Handle specific admin permission error
+      if (error.message?.includes('Admin') || error.message?.includes('403')) {
+        alert('Access denied. Admin privileges required for this action.');
+      } else {
+        alert('Failed to delete job postings. Please try again.');
+      }
+    } finally {
+      setIsDeletingAll(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleEditJob = async (job: JobPostingListItem) => {
+    setEditingJob(job);
+    setIsLoadingEditData(true);
+    setEditingJobData(null);
+    
+    try {
+      const jobData = await api.getJobForEdit(job.job_id);
+      setEditingJobData(jobData);
+      setShowEditForm(true);
+    } catch (error) {
+      console.error('Failed to load job data for editing:', error);
+    } finally {
+      setIsLoadingEditData(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await loadJobPostings();
+    } catch (error) {
+      console.error('Failed to refresh job postings:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleMatchCandidates = async (job: JobPostingListItem) => {
+    const totalCVs = job.application_count ?? 0;
+    if (totalCVs === 0) return;
+    try {
+      // Show matching overlay immediately (same as Database) and switch to Match tab so user sees animation
+      setMatchingProgress({
+        totalCVs,
+        processedCVs: 0,
+        currentStage: 'initializing',
+        isVisible: true,
+        estimatedTimeRemaining: Math.max(30, totalCVs * 3),
+      });
+      setAppLoading('careersMatching', true);
+      setCurrentTab('match');
+      selectJob(job);
+      await new Promise((r) => setTimeout(r, 500));
+      await matchJobCandidates(job.job_id);
+    } catch (error) {
+      console.error('Failed to match candidates:', error);
+      alert('Failed to match candidates. Please try again.');
+    }
+  };
+
+  const handleDeleteJob = async (job: JobPostingListItem) => {
+    setIsDeletingJob(job.job_id);
+    try {
+      const response = await api.deleteJobPosting(job.job_id);
+      if (response.success) {
+        await loadJobPostings();
+        alert(`Successfully deleted job posting "${job.job_title}"!\n\nDetails:\n- Job posting deleted: ${response.details.job_posting_deleted ? 'Yes' : 'No'}\n- JD documents deleted: ${response.details.jd_documents_deleted}\n- JD structured data deleted: ${response.details.jd_structured_deleted}\n- JD embeddings deleted: ${response.details.jd_embeddings_deleted}\n- Applications archived: ${response.details.applications_archived}`);
+      } else {
+        alert('Failed to delete job posting. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('Failed to delete job posting:', error);
+      // Handle specific errors
+      if (error.message?.includes('404') || error.message?.includes('not found')) {
+        alert('Job posting not found. It may have already been deleted.');
+      } else if (error.message?.includes('403') || error.message?.includes('You can only delete job postings that you created')) {
+        alert('Access denied. You can only delete job postings that you created.');
+      } else if (error.message?.includes('401')) {
+        alert('Access denied. Please make sure you are logged in.');
+      } else {
+        alert('Failed to delete job posting. Please try again.');
+      }
+    } finally {
+      setIsDeletingJob(null);
+      setShowJobDeleteConfirm(null);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  // Filter jobs based on selected filter
+  const filteredJobs = jobPostings.filter(job => {
+    if (jobFilter === 'all') {
+      // All users can see all jobs
+      return true;
+    }
+    if (jobFilter === 'yours') return job.posted_by_user === user?.username;
+    if (jobFilter === 'others') {
+      // All users can see others' jobs
+      return job.posted_by_user !== user?.username;
+    }
+    return true;
+  });
+
+  if (!user) {
+    return (
+      <div className="p-6">
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            You need to be logged in to access the careers page.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (isLoading || loadingStates.careers) {
+    return (
+      <div className="p-6">
+        <LoadingCard />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Error loading job postings: {error}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Careers</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-0.5">
+            {user.role === 'admin' ? 'Manage job postings and applications' : `Your job postings (${user.username})`}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            className="border-gray-300 text-gray-700"
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
+                Refreshing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </>
+            )}
+            </Button>
+          <Button
+            onClick={() => setShowCreateForm(true)}
+            className="bg-[#00529b] hover:bg-[#003d73] !text-white border-0"
+          >
+            <FileText className="w-4 h-4 mr-2 !text-white" />
+            <span className="!text-white">Post JD as File</span>
+          </Button>
+          {/* 🚨 ADMIN-ONLY DELETE ALL BUTTON 🚨 */}
+          <AdminOnly>
+            {jobPostings.length > 0 && (
+              <Button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="bg-red-600 hover:bg-red-700 text-white border-0"
+                disabled={isDeletingAll}
+              >
+                {isDeletingAll ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete All Jobs
+                  </>
+                )}
+              </Button>
+            )}
+          </AdminOnly>
+            </div>
+      </div>
+
+      {/* Role-based information banner */}
+      {user.role === 'admin' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+          <div className="flex items-start sm:items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 sm:mt-0 shrink-0"></div>
+            <p className="text-blue-800 text-xs sm:text-sm">
+              <strong>Admin View:</strong> You can see and manage all job postings in the system.
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {/* Filter Dropdown for All Users */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Filter className="w-4 h-4 text-gray-500 shrink-0" />
+        <label className="text-sm font-medium text-gray-700 shrink-0">Filter jobs:</label>
+        <select
+          value={jobFilter}
+          onChange={(e) => setJobFilter(e.target.value as 'all' | 'yours' | 'others')}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00529b] focus:border-[#00529b] min-w-0"
+        >
+          <option value="all">All Jobs</option>
+          <option value="yours">Your Jobs</option>
+          <option value="others">Others' Jobs</option>
+        </select>
+        <span className="text-xs text-gray-500">
+          Showing {filteredJobs.length} of {jobPostings.length} jobs
+        </span>
+      </div>
+      
+      {user.role === 'user' && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+          <div className="flex items-start sm:items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5 sm:mt-0 shrink-0"></div>
+            <p className="text-green-800 text-xs sm:text-sm">
+              <strong>User View:</strong> You can see all job postings but can only edit and manage the ones you created.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Create Job Form (File Upload) - Positioned right after filters */}
+      {showCreateForm && (
+        <JobPostingForm
+          onSuccess={() => {
+            setShowCreateForm(false);
+            loadJobPostings();
+          }}
+        />
+      )}
+
+      {/* Job Postings List */}
+      <div className="grid gap-6">
+        {filteredJobs.length === 0 ? (
+        <Card>
+            <CardContent className="p-12 text-center">
+              <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {jobPostings.length === 0 
+                  ? "No job postings yet" 
+                  : `No jobs found for "${jobFilter === 'all' ? 'All Jobs' : jobFilter === 'yours' ? 'Your Jobs' : 'Others\' Jobs'}" filter`
+                }
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {jobPostings.length === 0 
+                  ? "Create your first job posting to get started." 
+                  : "Try changing the filter or create a new job posting."
+                }
+              </p>
+              <div className="flex justify-center space-x-3">
+                <Button
+                  onClick={() => setShowCreateForm(true)}
+                  className="bg-[#00529b] hover:bg-[#003d73] text-white border-0"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Post JD as File
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredJobs.map((job) => (
+            <div key={job.job_id} className="space-y-4">
+              <Card
+                className={`hover:shadow-md transition-shadow border-gray-200 ${
+                  selectedJob?.job_id === job.job_id ? 'ring-2 ring-[#00529b] bg-[#00529b]/5' : ''
+                }`}
+              >
+              <CardHeader className="p-4 sm:p-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                      <CardTitle className="text-lg sm:text-xl break-words">{job.job_title}</CardTitle>
+                      <Badge variant={job.is_active ? "default" : "secondary"}>
+                        {job.is_active ? "Active" : "Inactive"}
+                            </Badge>
+                        </div>
+                        
+                        {/* User Attribution */}
+                        {job.posted_by_user && (
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-gray-500 mb-2">
+                            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                            <span>Posted by: </span>
+                            <span className="font-medium text-gray-700">{job.posted_by_user}</span>
+                            {job.posted_by_role === 'admin' && (
+                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">Admin</Badge>
+                            )}
+                            {job.posted_by_role === 'user' && (
+                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">User</Badge>
+                            )}
+                            {job.posted_by_user === user.username && (
+                              <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">Your Job</Badge>
+                            )}
+                          </div>
+                        )}
+                        
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600">
+                      <div className="flex items-center space-x-1">
+                        <Users className="w-4 h-4" />
+                        <span>{job.application_count} applications</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <FileText className="w-4 h-4" />
+                        <span>Created {formatDate(job.upload_date)}</span>
+                      </div>
+                        </div>
+                        
+                        {/* Email Subject Template for Naukri */}
+                        <div className="mt-3">
+                          {job.email_subject_template && (
+                            <div className="min-w-0 p-2.5 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-xs font-medium text-blue-700 mb-1">Email Subject for Naukri/Candidates:</div>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <code className="text-xs sm:text-sm font-mono text-blue-900 bg-blue-100 px-2 py-1 rounded break-all">
+                                      {job.email_subject_template}
+                                    </code>
+                                    <span className="text-xs text-blue-600">({job.email_subject_id})</span>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (job.email_subject_template) {
+                                      navigator.clipboard.writeText(job.email_subject_template);
+                                      setCopiedLink(`${job.job_id}-subject`);
+                                      setTimeout(() => setCopiedLink(null), 2000);
+                                    }
+                                  }}
+                                  className="shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                                  title="Copy Email Subject"
+                                >
+                                  {copiedLink === `${job.job_id}-subject` ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                </Button>
+                              </div>
+                              <div className="text-xs text-blue-600 mt-2">
+                                💡 Paste this subject when posting on Naukri or sharing with candidates
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center justify-end sm:justify-start gap-1 sm:gap-2 sm:ml-4 shrink-0">
+                    {/* Edit button - only show if user can edit */}
+                    {job.can_edit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditJob(job);
+                        }}
+                        title="Edit Job Posting"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        disabled={isLoadingEditData}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
+                    )}
+                    
+                    
+                    {/* Toggle status button - only show if user can edit */}
+                    {job.can_edit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleStatus(job.job_id, job.is_active);
+                        }}
+                        title={job.is_active ? "Deactivate Job" : "Activate Job"}
+                        className={job.is_active 
+                          ? "text-orange-600 hover:text-orange-700 hover:bg-orange-50" 
+                          : "text-green-600 hover:text-green-700 hover:bg-green-50"
+                        }
+                      >
+                        {job.is_active ? (
+                          <ToggleLeft className="w-4 h-4" />
+                        ) : (
+                          <ToggleRight className="w-4 h-4" />
+                        )}
+                      </Button>
+                    )}
+                    
+                    {/* Delete button - only show if user can delete */}
+                    {job.can_delete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowJobDeleteConfirm(job);
+                        }}
+                        title="Delete Job Posting"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        disabled={isDeletingJob === job.job_id}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                    
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                        const jobUrl = `${window.location.origin}/careers/jobs/${job.public_token}`;
+                        navigator.clipboard.writeText(jobUrl);
+                        setCopiedLink(job.job_id);
+                        setTimeout(() => setCopiedLink(null), 2000);
+                      }}
+                      title="Copy Job Link"
+                      className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                        >
+                          {copiedLink === job.job_id ? (
+                        <Check className="w-4 h-4" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                        window.open(`/careers/jobs/${job.public_token}`, '_blank');
+                          }}
+                      title="View Job Posting"
+                      className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
+                    
+                  </div>
+              </div>
+              {/* Match + View Applied Candidates — side by side on desktop, stack on mobile */}
+              {(job.application_count || 0) > 0 && (
+                <div className="mt-3 flex flex-col sm:flex-row justify-end gap-2">
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMatchCandidates(job);
+                    }}
+                    title="Match Candidates"
+                    className="bg-[#00529b] hover:bg-[#003d73] !text-white w-full sm:w-auto"
+                  >
+                    <Target className="w-4 h-4 mr-1 !text-white shrink-0" />
+                    <span className="!text-white truncate">Match ({job.application_count || 0})</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleSelectJob(job)}
+                    className="bg-[#00529b] hover:bg-[#003d73] !text-white w-full sm:w-auto"
+                  >
+                    <Users className="w-4 h-4 mr-2 !text-white shrink-0" />
+                    <span className="!text-white truncate">View Applied Candidates ({job.application_count || 0})</span>
+                  </Button>
+                </div>
+              )}
+              </CardHeader>
+              
+              </Card>
+        
+              {/* Edit Job Form - Show directly below the job being edited */}
+              {showEditForm && editingJob && editingJobData && editingJob.job_id === job.job_id && (
+                <div className="mt-4">
+                  <JobPostingForm
+                    jobId={editingJob.job_id}
+                    publicToken={editingJob.public_token === "unknown" ? undefined : editingJob.public_token}
+                    initialData={{
+                      jobTitle: editingJobData.job_title || '',
+                      jobLocation: editingJobData.job_location || '',
+                      jobSummary: editingJobData.job_summary || '',
+                      keyResponsibilities: editingJobData.key_responsibilities || '',
+                      qualifications: editingJobData.qualifications || ''
+                    }}
+                    onSuccess={() => {
+                      setShowEditForm(false);
+                      setEditingJob(null);
+                      setEditingJobData(null);
+                      loadJobPostings();
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Applicants for selected job — full-width table */}
+      {selectedJob && (
+        <div className="mt-6 sm:mt-8 border border-gray-200 rounded-xl bg-white overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3 p-3 sm:p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                Applicants for {selectedJob.job_title}
+              </h2>
+              <span className="text-xs sm:text-sm text-gray-600 shrink-0">
+                {(selectedJob.application_count ?? 0)} candidate{(selectedJob.application_count ?? 0) !== 1 ? 's' : ''}
+              </span>
+              {(selectedJob.application_count || 0) > 0 && (
+                <Button
+                  size="sm"
+                  onClick={() => handleMatchCandidates(selectedJob)}
+                  className="bg-[#00529b] hover:bg-[#003d73] !text-white w-full sm:w-auto"
+                >
+                  <Target className="w-4 h-4 mr-2 !text-white" />
+                  <span className="!text-white">Match ({selectedJob.application_count || 0})</span>
+                </Button>
+              )}
+            </div>
+            <Button variant="outline" size="sm" onClick={handleCloseJobDetails} className="border-gray-300 w-full sm:w-auto">
+              Close applicants
+            </Button>
+          </div>
+          <ApplicationsList />
+        </div>
+      )}
+
+      {/* 🚨 ADMIN-ONLY DELETE CONFIRMATION DIALOG 🚨 */}
+      <AdminOnly>
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center mb-4">
+                <AlertCircle className="w-6 h-6 text-red-600 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">Delete All Job Postings</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete all job postings? This action cannot be undone.
+                <br /><br />
+                <strong>Note:</strong> All CVs (including job applications) will be preserved.
+                <br />
+                <strong className="text-red-600">⚠️ Admin-only action</strong>
+              </p>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700"
+                  disabled={isDeletingAll}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteAllJobPostings}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  style={{ color: 'white' }}
+                  disabled={isDeletingAll}
+                >
+                  {isDeletingAll ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete All
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AdminOnly>
+
+      {/* Individual Job Delete Confirmation Dialog */}
+      {showJobDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center mb-4">
+              <AlertCircle className="w-6 h-6 text-red-600 mr-3" />
+              <h3 className="text-lg font-semibold text-gray-900">Delete Job Posting</h3>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete <strong>"{showJobDeleteConfirm.job_title}"</strong>?
+            </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+              <p className="text-sm text-yellow-800">
+                <strong>This action will:</strong>
+              </p>
+              <ul className="text-sm text-yellow-700 mt-1 list-disc list-inside">
+                <li>Mark the job posting as deleted</li>
+                <li>Archive {showJobDeleteConfirm.application_count || 0} application(s)</li>
+                <li>Remove the job from public view</li>
+              </ul>
+              <p className="text-sm text-yellow-800 mt-2">
+                💡 <strong>Note:</strong> This is a soft deletion - data can be recovered if needed.
+              </p>
+              {user.role === 'admin' && showJobDeleteConfirm.posted_by_user !== user.username && (
+                <p className="text-sm text-blue-800 mt-2">
+                  🔧 <strong>Admin Action:</strong> You are deleting a job posted by {showJobDeleteConfirm.posted_by_user}.
+                </p>
+              )}
+              {user.role === 'user' && showJobDeleteConfirm.posted_by_user === user.username && (
+                <p className="text-sm text-green-800 mt-2">
+                  ✅ <strong>Your Job:</strong> You are deleting your own job posting.
+                </p>
+              )}
+            </div>
+            <div className="flex justify-end space-x-3">
+              <Button
+                onClick={() => setShowJobDeleteConfirm(null)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-700"
+                disabled={isDeletingJob === showJobDeleteConfirm.job_id}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleDeleteJob(showJobDeleteConfirm)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+                style={{ color: 'white' }}
+                disabled={isDeletingJob === showJobDeleteConfirm.job_id}
+              >
+                {isDeletingJob === showJobDeleteConfirm.job_id ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Job
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+      </div>
+      )}
+
+    </div>
+  );
+}
