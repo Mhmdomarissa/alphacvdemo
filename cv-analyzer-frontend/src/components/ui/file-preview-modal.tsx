@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Download, ZoomIn, ZoomOut, Maximize2, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -69,20 +70,20 @@ export function FilePreviewModal({ isOpen, onClose, fileUrl, fileName, fileId, f
         const loadDocx = async () => {
             try {
                 // 1. Fetch the blob first
-                console.log('Fetching DOCX blob from:', fileUrl);
+                logger.debug('Fetching DOCX blob from:', fileUrl);
                 setLoadingStatus('Downloading document...');
                 const response = await fetch(fileUrl);
                 if (!response.ok) {
                     throw new Error(`Failed to load DOCX file: ${response.statusText}`);
                 }
                 const blob = await response.blob();
-                console.log('DOCX blob fetched, size:', blob.size);
+                logger.debug('DOCX blob fetched, size:', blob.size);
 
                 if (cancelled) return;
 
                 // 2. Try docx-preview (Primary Renderer)
                 try {
-                    console.log('Attempting render with docx-preview...');
+                    logger.debug('Attempting render with docx-preview...');
                     setLoadingStatus('Loading renderer...');
                     // Dynamic import inside the effect
                     const docxPreview = await import('docx-preview');
@@ -115,12 +116,12 @@ export function FilePreviewModal({ isOpen, onClose, fileUrl, fileName, fileId, f
                         timeoutPromise
                     ]);
 
-                    console.log('docx-preview rendering success');
+                    logger.debug('docx-preview rendering success');
                     if (!cancelled) setLoading(false);
                     return; // Success!
 
                 } catch (primaryErr) {
-                    console.warn('docx-preview failed or timed out:', primaryErr);
+                    logger.warn('docx-preview failed or timed out:', primaryErr);
                     setLoadingStatus('Primary renderer failed. Attempting fallback...');
                     // Fallback will proceed below
                 }
@@ -129,7 +130,7 @@ export function FilePreviewModal({ isOpen, onClose, fileUrl, fileName, fileId, f
 
                 // 3. Try Mammoth (Fallback Renderer)
                 try {
-                    console.log('Attempting render with Mammoth fallback...');
+                    logger.debug('Attempting render with Mammoth fallback...');
                     setLoadingStatus('Loading fallback viewer...');
                     const mammoth = (await import('mammoth')).default;
 
@@ -156,16 +157,16 @@ export function FilePreviewModal({ isOpen, onClose, fileUrl, fileName, fileId, f
                             </div>
                         `;
                     }
-                    console.log('Mammoth rendering success');
+                    logger.debug('Mammoth rendering success');
                     if (!cancelled) setLoading(false);
 
                 } catch (fallbackErr) {
-                    console.error('Mammoth fallback failed:', fallbackErr);
+                    logger.error('Mammoth fallback failed:', fallbackErr);
                     throw new Error('Failed to render DOCX with standard or fallback viewers.');
                 }
 
             } catch (err) {
-                console.error('DOCX load error:', err);
+                logger.error('DOCX load error:', err);
                 if (!cancelled) {
                     setError('Failed to load DOCX document. ' + (err instanceof Error ? err.message : String(err)));
                     setLoading(false);
@@ -186,7 +187,7 @@ export function FilePreviewModal({ isOpen, onClose, fileUrl, fileName, fileId, f
     }
 
     function onDocumentLoadError(err: Error) {
-        console.error('PDF load error:', err);
+        logger.error('PDF load error:', err);
         setError('Failed to load PDF document.');
         setLoading(false);
     }

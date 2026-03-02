@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 
 import { useState, useEffect } from 'react';
 import { Mail, RefreshCw, CheckCircle, XCircle, AlertCircle, PlayCircle } from 'lucide-react';
@@ -46,7 +47,7 @@ export default function EmailPage() {
         setStatus(data);
       }
     } catch (error) {
-      console.error('Failed to load email status:', error);
+      logger.error('Failed to load email status:', error);
     }
   };
 
@@ -63,7 +64,7 @@ export default function EmailPage() {
         setHealth(data);
       }
     } catch (error) {
-      console.error('Failed to load email health:', error);
+      logger.error('Failed to load email health:', error);
     }
   };
 

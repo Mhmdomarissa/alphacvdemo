@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
@@ -55,7 +56,7 @@ export default function ApplicationsList() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Failed to download CV:', error);
+      logger.error('Failed to download CV:', error);
     } finally {
       setDownloadingCV(null);
     }
@@ -83,7 +84,7 @@ export default function ApplicationsList() {
         await loadJobApplications(selectedJob.job_id);
       }
     } catch (error) {
-      console.error('Failed to save note:', error);
+      logger.error('Failed to save note:', error);
       alert('Failed to save note. Please try again.');
     } finally {
       setSavingNote(null);
@@ -124,7 +125,7 @@ export default function ApplicationsList() {
       };
       setViewingCVData({ cvId, filename, content: JSON.stringify(content) });
     } catch (error) {
-      console.error('Failed to load CV data:', error);
+      logger.error('Failed to load CV data:', error);
       setViewingCVData({ cvId, filename, content: 'Failed to load CV content' });
     } finally {
       setLoadingCVData(false);
@@ -209,7 +210,7 @@ export default function ApplicationsList() {
       setNewNoteText('');
       if (selectedJob) await loadJobApplications(selectedJob.job_id);
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to save note', e);
     } finally {
       setSavingPanelNote(false);
     }
@@ -237,7 +238,7 @@ export default function ApplicationsList() {
       setDetailNotes(res.notes || []);
       if (selectedJob) await loadJobApplications(selectedJob.job_id);
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to delete note', e);
     }
   };
 
@@ -253,7 +254,7 @@ export default function ApplicationsList() {
   if (isLoading) {
     return (
       <div className="p-6 flex justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#00529b]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
       </div>
     );
   }
@@ -310,7 +311,7 @@ export default function ApplicationsList() {
                 </div>
               </td>
               <td className="py-2 sm:py-3 px-2 sm:px-4">
-                <a href={`mailto:${application.applicant_email}`} className="text-[#00529b] hover:underline truncate block max-w-[120px] sm:max-w-[200px]" title={application.applicant_email}>
+                <a href={`mailto:${application.applicant_email}`} className="text-brand-600 hover:underline truncate block max-w-[120px] sm:max-w-[200px]" title={application.applicant_email}>
                   {application.applicant_email}
                 </a>
                 {application.applicant_phone && (
@@ -403,7 +404,7 @@ export default function ApplicationsList() {
             <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
               {loadingCVData ? (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#00529b]" />
+                  <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
                   <p className="text-gray-500 mt-2">Loading details...</p>
                 </div>
               ) : (
@@ -440,7 +441,7 @@ export default function ApplicationsList() {
                           )}
                           <Button
                             size="sm"
-                            className="mt-3 w-full bg-[#00529b] hover:bg-[#003d73] text-white"
+                            className="mt-3 w-full bg-brand-600 hover:bg-brand-700 text-white"
                             onClick={() => setPdfPreview({ cvId: viewingCVData.cvId, fileName })}
                           >
                             <Eye className="w-4 h-4 mr-2" />
@@ -479,11 +480,11 @@ export default function ApplicationsList() {
                                       <textarea
                                         value={editNoteText}
                                         onChange={(e) => setEditNoteText(e.target.value)}
-                                        className="w-full text-sm border border-gray-300 rounded-lg p-2 resize-none focus:ring-2 focus:ring-[#00529b]"
+                                        className="w-full text-sm border border-gray-300 rounded-lg p-2 resize-none focus:ring-2 focus:ring-brand-600"
                                         rows={2}
                                       />
                                       <div className="flex gap-2">
-                                        <Button size="sm" onClick={handlePanelSaveEditNote} disabled={savingPanelNote} className="bg-[#00529b] hover:bg-[#003d73]">
+                                        <Button size="sm" onClick={handlePanelSaveEditNote} disabled={savingPanelNote} className="bg-brand-600 hover:bg-brand-700">
                                           {savingPanelNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                           <span className="ml-1">Save</span>
                                         </Button>
@@ -497,7 +498,7 @@ export default function ApplicationsList() {
                                         <span className="text-xs text-gray-500">{note.hr_user} • {note.updated_at ? new Date(note.updated_at).toLocaleDateString() : ''}</span>
                                         {note.hr_user === user?.username && (
                                           <div className="flex gap-2">
-                                            <button type="button" className="text-xs text-[#00529b] hover:underline" onClick={() => { setEditingNoteIndex(i); setEditNoteText(note.note || ''); }}>Edit</button>
+                                            <button type="button" className="text-xs text-brand-600 hover:underline" onClick={() => { setEditingNoteIndex(i); setEditNoteText(note.note || ''); }}>Edit</button>
                                             <button type="button" className="text-xs text-red-600 hover:underline" onClick={() => handlePanelDeleteNote(note.hr_user)}>Delete</button>
                                           </div>
                                         )}
@@ -513,12 +514,12 @@ export default function ApplicationsList() {
                               value={newNoteText}
                               onChange={(e) => setNewNoteText(e.target.value)}
                               placeholder="Add a note..."
-                              className="w-full text-sm border border-gray-300 rounded-lg p-2 resize-none focus:ring-2 focus:ring-[#00529b]"
+                              className="w-full text-sm border border-gray-300 rounded-lg p-2 resize-none focus:ring-2 focus:ring-brand-600"
                               rows={2}
                             />
                             <Button
                               size="sm"
-                              className="mt-2 bg-[#00529b] hover:bg-[#003d73] text-white"
+                              className="mt-2 bg-brand-600 hover:bg-brand-700 text-white"
                               onClick={handlePanelAddNote}
                               disabled={savingPanelNote || !newNoteText.trim()}
                             >
@@ -545,7 +546,7 @@ export default function ApplicationsList() {
         pdfLoading ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-3">
-              <Loader2 className="w-10 h-10 animate-spin text-[#00529b]" />
+              <Loader2 className="w-10 h-10 animate-spin text-brand-600" />
               <p className="text-gray-700">Loading PDF...</p>
             </div>
           </div>

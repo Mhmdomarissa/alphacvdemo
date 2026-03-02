@@ -13,6 +13,7 @@ import {
 } from '@/lib/types';
 import { api } from '@/lib/api';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/utils';
 import { useAuthStore } from './authStore';
 
 interface LoadingState {
@@ -216,9 +217,9 @@ export const useAppStore = create<AppState>()(
           });
           setLoading('cvs', false);
           logger.info(`Loaded ${response.cvs.length} CVs${total > response.cvs.length ? ` of ${total}` : ''}`);
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to load CVs', error);
-          setLoading('cvs', false, error.message);
+          setLoading('cvs', false, getErrorMessage(error));
         }
       },
       
@@ -234,9 +235,9 @@ export const useAppStore = create<AppState>()(
           }));
           setLoading('cvs', false);
           logger.info(`Loaded more CVs: ${cvs.length + response.cvs.length} total`);
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to load more CVs', error);
-          setLoading('cvs', false, error.message);
+          setLoading('cvs', false, getErrorMessage(error));
         }
       },
       
@@ -275,9 +276,9 @@ export const useAppStore = create<AppState>()(
           await loadCVs();
           setLoading('upload', false);
           logger.info('CV upload completed successfully');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to upload CV', error);
-          setLoading('upload', false, error.message);
+          setLoading('upload', false, getErrorMessage(error));
         }
       },
       
@@ -295,9 +296,9 @@ export const useAppStore = create<AppState>()(
           await loadCVs();
           setLoading('upload', false);
           logger.info('CV uploads completed successfully');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to upload CVs', error);
-          setLoading('upload', false, error.message);
+          setLoading('upload', false, getErrorMessage(error));
         }
       },
       
@@ -313,9 +314,9 @@ export const useAppStore = create<AppState>()(
           await loadCVs();
           setLoading('upload', false);
           logger.info('CV deletion completed successfully');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to delete CV', error);
-          setLoading('upload', false, error.message);
+          setLoading('upload', false, getErrorMessage(error));
         }
       },
       
@@ -331,9 +332,9 @@ export const useAppStore = create<AppState>()(
           await loadCVs();
           setLoading('upload', false);
           logger.info('CV reprocessing completed successfully');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to reprocess CV', error);
-          setLoading('upload', false, error.message);
+          setLoading('upload', false, getErrorMessage(error));
         }
       },
       
@@ -352,9 +353,9 @@ export const useAppStore = create<AppState>()(
           });
           setLoading('jds', false);
           logger.info(`Loaded ${response.jds.length} JDs${total > response.jds.length ? ` of ${total}` : ''}`);
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to load JDs', error);
-          setLoading('jds', false, error.message);
+          setLoading('jds', false, getErrorMessage(error));
         }
       },
       
@@ -370,9 +371,9 @@ export const useAppStore = create<AppState>()(
           }));
           setLoading('jds', false);
           logger.info(`Loaded more JDs: ${jds.length + response.jds.length} total`);
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to load more JDs', error);
-          setLoading('jds', false, error.message);
+          setLoading('jds', false, getErrorMessage(error));
         }
       },
       
@@ -392,9 +393,9 @@ export const useAppStore = create<AppState>()(
           await loadJDs();
           setLoading('upload', false);
           logger.info('JD upload completed successfully');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to upload JD', error);
-          setLoading('upload', false, error.message);
+          setLoading('upload', false, getErrorMessage(error));
         }
       },
       
@@ -410,9 +411,9 @@ export const useAppStore = create<AppState>()(
           await loadJDs();
           setLoading('upload', false);
           logger.info('JD deletion completed successfully');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to delete JD', error);
-          setLoading('upload', false, error.message);
+          setLoading('upload', false, getErrorMessage(error));
         }
       },
       
@@ -428,9 +429,9 @@ export const useAppStore = create<AppState>()(
           await loadJDs();
           setLoading('upload', false);
           logger.info('JD reprocessing completed successfully');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to reprocess JD', error);
-          setLoading('upload', false, error.message);
+          setLoading('upload', false, getErrorMessage(error));
         }
       },
       
@@ -583,12 +584,17 @@ export const useAppStore = create<AppState>()(
           });
           setLoading('matching', false);
           logger.info(`Matching completed: ${result.candidates.length} candidates processed`);
-        } catch (error: any) {
+          // Notify user
+          const { showSuccess } = await import('@/stores/toastStore').then(m => m.useToastStore.getState());
+          showSuccess('Match complete', `${result.candidates.length} candidates ranked`);
+        } catch (error: unknown) {
           logger.error('Failed to run matching', error);
           hideMatchingProgress();
-          // Extract error message from detail (backend) or message (network)
-          const errorMessage = error?.detail || error?.response?.data?.detail || error?.message || 'Failed to run matching';
+          const errorMessage = getErrorMessage(error);
           setLoading('matching', false, errorMessage);
+          // Notify user
+          const { showError } = await import('@/stores/toastStore').then(m => m.useToastStore.getState());
+          showError('Matching failed', errorMessage);
           
           // Queue session completion removed
         }
@@ -625,9 +631,9 @@ export const useAppStore = create<AppState>()(
           set({ systemHealth: health });
           setLoading('health', false);
           logger.info('System health check completed', { status: health.status });
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to check system health', error);
-          setLoading('health', false, error.message);
+          setLoading('health', false, getErrorMessage(error));
         }
       },
       
@@ -641,9 +647,9 @@ export const useAppStore = create<AppState>()(
           set({ systemStats: stats });
           setLoading('stats', false);
           logger.info('System stats loaded');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to load system stats', error);
-          setLoading('stats', false, error.message);
+          setLoading('stats', false, getErrorMessage(error));
         }
       },
       
@@ -657,9 +663,9 @@ export const useAppStore = create<AppState>()(
           set({ databaseView: view });
           setLoading('database', false);
           logger.info('Database view loaded');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to load database view', error);
-          setLoading('database', false, error.message);
+          setLoading('database', false, getErrorMessage(error));
         }
       },
       
@@ -683,9 +689,9 @@ export const useAppStore = create<AppState>()(
           
           setLoading('database', false);
           logger.info('Database cleared successfully');
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to clear database', error);
-          setLoading('database', false, error.message);
+          setLoading('database', false, getErrorMessage(error));
         }
       },
       

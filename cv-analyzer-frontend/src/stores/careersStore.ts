@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
+import { getErrorMessage } from '@/lib/utils';
 import { 
   JobPostingResponse, 
   JobPostingListItem, 
@@ -99,11 +100,11 @@ export const useCareersStore = create<CareersStore>((set, get) => ({
       
       set({ isCreatingJob: false });
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create job posting:', error);
       set({ 
         isCreatingJob: false, 
-        error: error.message || 'Failed to create job posting' 
+        error: getErrorMessage(error) || 'Failed to create job posting' 
       });
       return null;
     }
@@ -128,11 +129,11 @@ export const useCareersStore = create<CareersStore>((set, get) => ({
       
       set({ isCreatingJob: false });
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create job posting with form data:', error);
       set({ 
         isCreatingJob: false, 
-        error: error.message || 'Failed to create job posting' 
+        error: getErrorMessage(error) || 'Failed to create job posting' 
       });
       return null;
     }
@@ -156,11 +157,11 @@ export const useCareersStore = create<CareersStore>((set, get) => ({
       
       set({ isCreatingJob: false });
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create manual job posting:', error);
       set({ 
         isCreatingJob: false, 
-        error: error.message || 'Failed to create job posting' 
+        error: getErrorMessage(error) || 'Failed to create job posting' 
       });
       return null;
     }
@@ -178,11 +179,11 @@ loadJobPostings: async () => {
     
     logger.info(`Loaded ${postings.length} job postings`);
     set({ jobPostings: postings, isLoading: false });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Failed to load job postings:', error);
     set({ 
       isLoading: false, 
-      error: error.message || 'Failed to load job postings' 
+      error: getErrorMessage(error) || 'Failed to load job postings' 
     });
   }
 },
@@ -218,11 +219,11 @@ loadJobPostings: async () => {
       
       logger.info('Job status updated successfully', { jobId, isActive });
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to update job status:', error);
       set({ 
         isUpdatingStatus: false, 
-        error: error.message || 'Failed to update job status' 
+        error: getErrorMessage(error) || 'Failed to update job status' 
       });
       return false;
     }
@@ -236,11 +237,11 @@ loadJobPostings: async () => {
       
       logger.info(`Loaded ${applications.length} applications for job ${jobId}`);
       set({ applications, isLoading: false });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to load applications:', error);
       set({ 
         isLoading: false, 
-        error: error.message || 'Failed to load applications' 
+        error: getErrorMessage(error) || 'Failed to load applications' 
       });
     }
   },
@@ -407,7 +408,7 @@ loadJobPostings: async () => {
         matched_applications: applicationsWithScores,
         top_candidates: applicationsWithScores.slice(0, 10)
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to match candidates:', error);
       // Extract error message from detail (backend) or message (network)
       const errorMessage = error?.detail || error?.response?.data?.detail || error?.message || 'Failed to match candidates';
@@ -462,11 +463,11 @@ loadPublicJob: async (token: string) => {
       title: job.job_title 
     });
     set({ publicJob: job, isLoading: false });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Failed to load public job:', error);
     set({ 
       isLoading: false, 
-      error: error.message || 'Job not found or no longer available' 
+      error: getErrorMessage(error) || 'Job not found or no longer available' 
     });
   }
 },
@@ -488,11 +489,11 @@ loadPublicJob: async (token: string) => {
       
       set({ isSubmittingApplication: false });
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to submit application:', error);
       set({ 
         isSubmittingApplication: false, 
-        error: error.message || 'Failed to submit application' 
+        error: getErrorMessage(error) || 'Failed to submit application' 
       });
       return null;
     }

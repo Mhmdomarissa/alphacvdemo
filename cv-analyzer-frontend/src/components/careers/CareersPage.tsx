@@ -1,4 +1,6 @@
 'use client';
+import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/utils';
 import React, { useEffect, useState } from 'react';
 import { 
   Plus, 
@@ -104,10 +106,10 @@ export default function CareersPage() {
       } else {
         alert('Failed to delete job postings. Please try again.');
       }
-    } catch (error: any) {
-      console.error('Failed to delete all job postings:', error);
+    } catch (error: unknown) {
+      logger.error('Failed to delete all job postings:', error);
       // Handle specific admin permission error
-      if (error.message?.includes('Admin') || error.message?.includes('403')) {
+      if (getErrorMessage(error)?.includes('Admin') || getErrorMessage(error)?.includes('403')) {
         alert('Access denied. Admin privileges required for this action.');
       } else {
         alert('Failed to delete job postings. Please try again.');
@@ -128,7 +130,7 @@ export default function CareersPage() {
       setEditingJobData(jobData);
       setShowEditForm(true);
     } catch (error) {
-      console.error('Failed to load job data for editing:', error);
+      logger.error('Failed to load job data for editing:', error);
     } finally {
       setIsLoadingEditData(false);
     }
@@ -139,7 +141,7 @@ export default function CareersPage() {
     try {
       await loadJobPostings();
     } catch (error) {
-      console.error('Failed to refresh job postings:', error);
+      logger.error('Failed to refresh job postings:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -163,7 +165,7 @@ export default function CareersPage() {
       await new Promise((r) => setTimeout(r, 500));
       await matchJobCandidates(job.job_id);
     } catch (error) {
-      console.error('Failed to match candidates:', error);
+      logger.error('Failed to match candidates:', error);
       alert('Failed to match candidates. Please try again.');
     }
   };
@@ -178,14 +180,14 @@ export default function CareersPage() {
       } else {
         alert('Failed to delete job posting. Please try again.');
       }
-    } catch (error: any) {
-      console.error('Failed to delete job posting:', error);
+    } catch (error: unknown) {
+      logger.error('Failed to delete job posting:', error);
       // Handle specific errors
-      if (error.message?.includes('404') || error.message?.includes('not found')) {
+      if (getErrorMessage(error)?.includes('404') || getErrorMessage(error)?.includes('not found')) {
         alert('Job posting not found. It may have already been deleted.');
-      } else if (error.message?.includes('403') || error.message?.includes('You can only delete job postings that you created')) {
+      } else if (getErrorMessage(error)?.includes('403') || getErrorMessage(error)?.includes('You can only delete job postings that you created')) {
         alert('Access denied. You can only delete job postings that you created.');
-      } else if (error.message?.includes('401')) {
+      } else if (getErrorMessage(error)?.includes('401')) {
         alert('Access denied. Please make sure you are logged in.');
       } else {
         alert('Failed to delete job posting. Please try again.');
@@ -278,7 +280,7 @@ export default function CareersPage() {
             </Button>
           <Button
             onClick={() => setShowCreateForm(true)}
-            className="bg-[#00529b] hover:bg-[#003d73] !text-white border-0"
+            className="bg-brand-600 hover:bg-brand-700 !text-white border-0"
           >
             <FileText className="w-4 h-4 mr-2 !text-white" />
             <span className="!text-white">Post JD as File</span>
@@ -327,7 +329,7 @@ export default function CareersPage() {
         <select
           value={jobFilter}
           onChange={(e) => setJobFilter(e.target.value as 'all' | 'yours' | 'others')}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00529b] focus:border-[#00529b] min-w-0"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 min-w-0"
         >
           <option value="all">All Jobs</option>
           <option value="yours">Your Jobs</option>
@@ -380,7 +382,7 @@ export default function CareersPage() {
               <div className="flex justify-center space-x-3">
                 <Button
                   onClick={() => setShowCreateForm(true)}
-                  className="bg-[#00529b] hover:bg-[#003d73] text-white border-0"
+                  className="bg-brand-600 hover:bg-brand-700 text-white border-0"
                 >
                   <FileText className="w-4 h-4 mr-2" />
                   Post JD as File
@@ -393,7 +395,7 @@ export default function CareersPage() {
             <div key={job.job_id} className="space-y-4">
               <Card
                 className={`hover:shadow-md transition-shadow border-gray-200 ${
-                  selectedJob?.job_id === job.job_id ? 'ring-2 ring-[#00529b] bg-[#00529b]/5' : ''
+                  selectedJob?.job_id === job.job_id ? 'ring-2 ring-brand-600 bg-brand-600/5' : ''
                 }`}
               >
               <CardHeader className="p-4 sm:p-6">
@@ -578,7 +580,7 @@ export default function CareersPage() {
                       handleMatchCandidates(job);
                     }}
                     title="Match Candidates"
-                    className="bg-[#00529b] hover:bg-[#003d73] !text-white w-full sm:w-auto"
+                    className="bg-brand-600 hover:bg-brand-700 !text-white w-full sm:w-auto"
                   >
                     <Target className="w-4 h-4 mr-1 !text-white shrink-0" />
                     <span className="!text-white truncate">Match ({job.application_count || 0})</span>
@@ -586,7 +588,7 @@ export default function CareersPage() {
                   <Button
                     size="sm"
                     onClick={() => handleSelectJob(job)}
-                    className="bg-[#00529b] hover:bg-[#003d73] !text-white w-full sm:w-auto"
+                    className="bg-brand-600 hover:bg-brand-700 !text-white w-full sm:w-auto"
                   >
                     <Users className="w-4 h-4 mr-2 !text-white shrink-0" />
                     <span className="!text-white truncate">View Applied Candidates ({job.application_count || 0})</span>
@@ -639,7 +641,7 @@ export default function CareersPage() {
                 <Button
                   size="sm"
                   onClick={() => handleMatchCandidates(selectedJob)}
-                  className="bg-[#00529b] hover:bg-[#003d73] !text-white w-full sm:w-auto"
+                  className="bg-brand-600 hover:bg-brand-700 !text-white w-full sm:w-auto"
                 >
                   <Target className="w-4 h-4 mr-2 !text-white" />
                   <span className="!text-white">Match ({selectedJob.application_count || 0})</span>

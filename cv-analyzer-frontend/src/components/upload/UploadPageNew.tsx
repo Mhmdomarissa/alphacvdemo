@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 import React, { useCallback, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
@@ -155,8 +156,8 @@ export default function UploadPageNew() {
           },
           dbId: dbId, // Store the database ID
         });
-      } catch (err: any) {
-        console.error('JD upload error:', err);
+      } catch (err: unknown) {
+        logger.error('JD upload error:', err);
         update(f.id, {
           status: 'error',
           error: err?.message || 'Processing failed',
@@ -189,8 +190,8 @@ export default function UploadPageNew() {
           },
           dbId: dbId, // Store the database ID
         });
-      } catch (err: any) {
-        console.error('CV upload error:', err);
+      } catch (err: unknown) {
+        logger.error('CV upload error:', err);
         update(f.id, {
           status: 'error',
           error: err?.message || 'Processing failed',
@@ -203,13 +204,13 @@ export default function UploadPageNew() {
   };
   /* ----------------------- Match Only Uploaded Files ----------------------- */
   const handleMatchUploadedOnly = async () => {
-    console.log("=== handleMatchUploadedOnly called ===");
+    logger.debug("=== handleMatchUploadedOnly called ===");
     
     // Get completed items with database IDs
     const completedJDs = jdItems.filter(f => f.status === 'completed' && f.dbId);
     const completedCVs = cvItems.filter(f => f.status === 'completed' && f.dbId);
-    console.log("Completed JDs with dbId:", completedJDs);
-    console.log("Completed CVs with dbId:", completedCVs);
+    logger.debug("Completed JDs with dbId:", completedJDs);
+    logger.debug("Completed CVs with dbId:", completedCVs);
     // Fallback: if no items have dbId, try to match by filename
     if (completedJDs.length === 0 && completedCVs.length === 0) {
       

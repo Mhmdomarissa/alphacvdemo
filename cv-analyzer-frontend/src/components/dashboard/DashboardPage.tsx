@@ -149,8 +149,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="relative overflow-hidden rounded-xl sm:rounded-2xl px-5 sm:px-8 py-8 sm:py-12 text-white"
-          style={{ background: 'linear-gradient(135deg,#00529b 0%,#003d73 50%,#001f3f 100%)' }}
+          className="relative overflow-hidden rounded-xl sm:rounded-2xl px-5 sm:px-8 py-8 sm:py-12 text-white bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900"
         >
           {/* Animated beams flowing across hero */}
           <BackgroundBeams />
@@ -191,8 +190,7 @@ export default function DashboardPage() {
             >
               <button
                 onClick={() => setCurrentTab('match')}
-                className="group flex items-center gap-2 px-6 py-3 bg-white text-sm font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-white/20 hover:scale-[1.02]"
-                style={{ color: '#00529b' }}
+                className="group flex items-center gap-2 px-6 py-3 bg-white text-sm font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-white/20 hover:scale-[1.02] text-brand-600"
               >
                 <Zap className="w-4 h-4" />
                 Try the Matcher
@@ -252,7 +250,7 @@ export default function DashboardPage() {
         {/* ── How it works — with stagger animation ──────────────── */}
         <div>
           <div className="flex items-center gap-2 mb-5">
-            <GitBranch className="w-5 h-5" style={{ color: '#00529b' }} />
+            <GitBranch className="w-5 h-5 text-brand-600" />
             <TextGenerateEffect words="How It Works" className="text-lg font-bold text-gray-900" />
             <span className="text-xs text-gray-400 font-normal ml-1 bg-gray-100 px-2 py-0.5 rounded-full">5-step pipeline</span>
           </div>
@@ -265,15 +263,14 @@ export default function DashboardPage() {
                 <SpotlightCard className="w-full px-3 py-4 bg-white rounded-xl sm:rounded-none border border-gray-200 sm:border-r-0 last:sm:border-r sm:first:rounded-l-xl sm:last:rounded-r-xl">
                   <div className="flex sm:flex-col items-center gap-2">
                     <motion.div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                      style={{ background: '#00529b' }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 bg-brand-600"
                       whileHover={{ scale: 1.15, rotate: 5 }}
                       transition={{ type: 'spring', stiffness: 300 }}
                     >
                       {i + 1}
                     </motion.div>
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-blue-50">
-                      <Icon className="w-4.5 h-4.5" style={{ color: '#00529b' }} />
+                      <Icon className="w-4.5 h-4.5 text-brand-600" />
                     </div>
                   </div>
                   <div className="sm:text-center mt-2">
@@ -292,7 +289,7 @@ export default function DashboardPage() {
         {/* ── Feature grid w/ spotlight + tilt ──────────────────── */}
         <div>
           <div className="flex items-center gap-2 mb-5">
-            <Shield className="w-5 h-5" style={{ color: '#00529b' }} />
+            <Shield className="w-5 h-5 text-brand-600" />
             <TextGenerateEffect words="Platform Capabilities" className="text-lg font-bold text-gray-900" />
           </div>
           <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" staggerDelay={0.1}>
@@ -329,7 +326,7 @@ export default function DashboardPage() {
           <GlowBorder duration={6} borderRadius={16}>
             <div className="p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Server className="w-5 h-5" style={{ color: '#00529b' }} />
+                <Server className="w-5 h-5 text-brand-600" />
                 <h2 className="text-base font-bold text-gray-900">Technology Stack</h2>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -374,8 +371,7 @@ export default function DashboardPage() {
           </div>
           <motion.button
             onClick={() => setCurrentTab('match')}
-            className="group flex items-center justify-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-xl transition-all shrink-0 sm:ml-4 w-full sm:w-auto shadow-sm"
-            style={{ background: '#00529b' }}
+            className="group flex items-center justify-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-xl transition-all shrink-0 sm:ml-4 w-full sm:w-auto shadow-sm bg-brand-600 hover:bg-brand-700"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >

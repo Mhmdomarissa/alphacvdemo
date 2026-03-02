@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import React, { useState, useEffect } from 'react';
 import { Upload, FileText, AlertCircle, Check, ExternalLink, Copy, Wand2, Edit3, Briefcase, Save, CheckCircle } from 'lucide-react';
 import { useCareersStore } from '@/stores/careersStore';
@@ -141,7 +142,7 @@ export default function JobPostingForm({ onSuccess, jobId, publicToken, initialD
         showError('Upload Failed', 'Please try again or contact support.');
       }
     } catch (error) {
-      console.error('Failed to process JD:', error);
+      logger.error('Failed to process JD:', error);
       showError('Upload Failed', 'Please try again or contact support.');
     } finally {
       setIsUploading(false);
@@ -177,7 +178,7 @@ export default function JobPostingForm({ onSuccess, jobId, publicToken, initialD
         setShowForm(true);
       }
     } catch (error) {
-      console.error('Failed to auto-fill form:', error);
+      logger.error('Failed to auto-fill form:', error);
       showError('Auto-fill Failed', 'Please try again or fill the form manually.');
       // Show form anyway for manual input
       setShowForm(true);
@@ -225,7 +226,7 @@ export default function JobPostingForm({ onSuccess, jobId, publicToken, initialD
   const handleSave = async () => {
     const currentJobId = jobId || success?.jobId;
     if (!currentJobId) {
-      console.error('No job ID available for saving');
+      logger.error('No job ID available for saving');
       return;
     }
 
@@ -243,7 +244,7 @@ export default function JobPostingForm({ onSuccess, jobId, publicToken, initialD
         onSuccess();
       }
     } catch (error) {
-      console.error('Failed to save job posting updates:', error);
+      logger.error('Failed to save job posting updates:', error);
       showError('Failed to Save Changes', 'Please try again or contact support if the issue persists.');
     } finally {
       setIsSaving(false);
@@ -300,7 +301,7 @@ export default function JobPostingForm({ onSuccess, jobId, publicToken, initialD
       }, 5000);
       }
     } catch (error) {
-      console.error('Failed to create job posting:', error);
+      logger.error('Failed to create job posting:', error);
       showError('Failed to Post Job', 'Please try again or contact support if the issue persists.');
     }
   };
@@ -345,7 +346,7 @@ export default function JobPostingForm({ onSuccess, jobId, publicToken, initialD
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } else {
-        console.error('Failed to copy link');
+        logger.error('Failed to copy link');
       }
     }
   };
@@ -358,7 +359,7 @@ export default function JobPostingForm({ onSuccess, jobId, publicToken, initialD
         setTimeout(() => setEmailSubjectCopied(false), 2000);
         showSuccess('Email Subject Copied!', 'Paste this subject in your Naukri job posting to enable email CV processing.');
       } else {
-        console.error('Failed to copy email subject');
+        logger.error('Failed to copy email subject');
         showError('Copy Failed', 'Please try again or copy the text manually.');
       }
     }

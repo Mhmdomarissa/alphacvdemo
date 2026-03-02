@@ -34,7 +34,7 @@ export function GlowBorder({
           style={{
             top: '-50%',
             left: '-50%',
-            background: 'conic-gradient(from 0deg, transparent 0%, #00529b 20%, transparent 40%, #00529b 60%, transparent 80%)',
+            background: 'conic-gradient(from 0deg, transparent 0%, var(--color-brand-600, #00529b) 20%, transparent 40%, var(--color-brand-600, #00529b) 60%, transparent 80%)',
             opacity: 0.45,
           }}
           animate={{ rotate: 360 }}

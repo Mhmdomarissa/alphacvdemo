@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 import React, { useState } from 'react';
 import {
   Server,
@@ -137,7 +138,7 @@ export default function SystemPanel() {
       
       setServiceDetails(mockDetails[serviceName as keyof typeof mockDetails]);
     } catch (error) {
-      console.error('Failed to fetch service details:', error);
+      logger.error('Failed to fetch service details:', error);
     } finally {
       setLoadingDetails(false);
     }
@@ -156,8 +157,8 @@ export default function SystemPanel() {
       await loadSystemStats();
       await loadDatabaseView();
       setShowClearDialog(false);
-    } catch (error: any) {
-      console.error('Failed to clear database:', error);
+    } catch (error: unknown) {
+      logger.error('Failed to clear database:', error);
     } finally {
       setIsClearing(false);
     }

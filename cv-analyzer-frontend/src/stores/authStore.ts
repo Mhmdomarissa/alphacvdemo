@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 import { getToken, setToken, clearToken } from '@/lib/auth';
 import { UserProfile } from '@/lib/types';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/utils';
 
 interface AuthState {
   token: string | null;
@@ -82,8 +83,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       
       logger.info('Login successful');
       return { success: true, role: user.role };
-    } catch (error: any) {
-      const errorMessage = error.message || 'Login failed';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || 'Login failed';
       logger.error('Login failed:', error);
       set({ loading: false, error: errorMessage });
       return { success: false, error: errorMessage };
@@ -103,8 +104,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       } else {
         throw new Error('Password verification failed');
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || error.message || 'Invalid credentials';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || 'Invalid credentials';
       logger.error('Password verification failed:', error);
       set({ loading: false, error: errorMessage });
       return { success: false, error: errorMessage };
@@ -124,8 +125,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       } else {
         throw new Error('Failed to send OTP');
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || error.message || 'Failed to send OTP';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || 'Failed to send OTP';
       logger.error('Send OTP failed:', error);
       set({ loading: false, error: errorMessage });
       return { success: false, error: errorMessage };
@@ -153,8 +154,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       
       logger.info('OTP verification successful');
       return { success: true, role: user.role };
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || error.message || 'OTP verification failed';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || 'OTP verification failed';
       logger.error('OTP verification failed:', error);
       set({ loading: false, error: errorMessage });
       return { success: false, error: errorMessage };

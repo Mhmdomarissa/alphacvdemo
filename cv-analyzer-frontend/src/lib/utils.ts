@@ -5,6 +5,25 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Safely extract a human-readable message from an unknown catch value. */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const e = error as Record<string, unknown>;
+    if (typeof e.detail === 'string') return e.detail;
+    if (typeof e.message === 'string') return e.message;
+    if (e.response && typeof e.response === 'object') {
+      const r = e.response as Record<string, unknown>;
+      if (r.data && typeof r.data === 'object') {
+        const d = r.data as Record<string, unknown>;
+        if (typeof d.detail === 'string') return d.detail;
+      }
+    }
+  }
+  return 'An unexpected error occurred';
+}
+
 export function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
 
@@ -36,12 +55,8 @@ export function getScoreBadgeVariant(score: number): 'default' | 'secondary' | '
   return 'destructive';
 }
 
-export function getMatchQualityColor(score: number): string {
-  if (score >= 0.8) return 'text-green-600';
-  if (score >= 0.6) return 'text-yellow-600';
-  if (score >= 0.4) return 'text-orange-600';
-  return 'text-red-600';
-}
+/** @deprecated Use getScoreColor instead */
+export const getMatchQualityColor = getScoreColor;
 
 export function getMatchQualityLabel(score: number): string {
   if (score >= 0.8) return 'Excellent';

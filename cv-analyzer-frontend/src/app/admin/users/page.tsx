@@ -48,7 +48,7 @@ export default function AdminUsersPage() {
       const usersList = await api.listUsers(token);
       setUsers(usersList);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err.message.includes('403') || err.message.includes('Admin only')) {
         setError('Access denied. Admin privileges required.');
       } else {
@@ -90,7 +90,7 @@ export default function AdminUsersPage() {
       setCreateForm({ username: '', password: '', email: '', role: 'user' });
       setCreateError(null);
       await fetchUsers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setCreateError(err.response?.data?.detail || err.message || 'Failed to create user');
     } finally {
       setCreateLoading(false);
@@ -107,7 +107,7 @@ export default function AdminUsersPage() {
       setEditUser(null);
       setEditForm({});
       await fetchUsers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'Failed to update user');
     } finally {
       setEditLoading(false);
@@ -121,7 +121,7 @@ export default function AdminUsersPage() {
     try {
       await api.deleteUser(token, userId);
       await fetchUsers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'Failed to delete user');
     }
   };
@@ -140,7 +140,7 @@ export default function AdminUsersPage() {
       await api.clearDatabase(token, true);
       setShowClearDialog(false);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'Failed to clear database');
     } finally {
       setIsClearing(false);

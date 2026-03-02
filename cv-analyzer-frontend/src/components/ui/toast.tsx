@@ -155,7 +155,7 @@ export function Toast({ id, type, title, message, duration = 4000, onClose }: To
 
 // Toast Container Component
 export interface ToastContainerProps {
-  toasts: ToastProps[];
+  toasts: Omit<ToastProps, 'onClose'>[];
   onClose: (id: string) => void;
 }
 

@@ -152,7 +152,7 @@ export function LoadingPage({ title, subtitle, type = 'database' }: LoadingPageP
         </div>
       </div>
       <div className="flex justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-[#00529b]" />
+        <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
       </div>
     </div>
   );

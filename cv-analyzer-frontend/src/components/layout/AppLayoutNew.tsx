@@ -19,6 +19,8 @@ import {
   X,
 } from 'lucide-react';
 import { useAppStore } from '@/stores/appStore';
+import { useToastStore } from '@/stores/toastStore';
+import { ToastContainer } from '@/components/ui/toast';
 
 interface AppLayoutNewProps {
   children: ReactNode;
@@ -65,8 +67,7 @@ function SidebarContent({
       <div className="px-5 pt-5 pb-4 border-b border-gray-200">
         <div className="flex items-center gap-2.5 mb-2">
           <motion.div
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: '#00529b' }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-brand-600"
             whileHover={{ scale: 1.1, rotate: 5 }}
             transition={{ type: 'spring', stiffness: 300 }}
           >
@@ -78,8 +79,7 @@ function SidebarContent({
           </div>
         </div>
         <motion.span
-          className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
-          style={{ color: '#00529b', background: '#eff6ff' }}
+          className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full text-brand-600 bg-brand-50"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
@@ -100,10 +100,9 @@ function SidebarContent({
             }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative ${
               currentTab === id
-                ? 'text-white shadow-sm'
+                ? 'text-white shadow-sm bg-brand-600'
                 : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
             }`}
-            style={currentTab === id ? { background: '#00529b' } : undefined}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 + i * 0.08 }}
@@ -124,10 +123,10 @@ function SidebarContent({
       </nav>
 
       {/* Quick stats */}
-      <div className="mx-3 mb-3 p-3 rounded-lg border border-blue-100" style={{ background: '#f0f7ff' }}>
+      <div className="mx-3 mb-3 p-3 rounded-lg border border-brand-100 bg-brand-50">
         <div className="flex items-center gap-1.5 mb-2.5">
-          <Users className="w-3.5 h-3.5" style={{ color: '#00529b' }} />
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#00529b' }}>Database</p>
+          <Users className="w-3.5 h-3.5 text-brand-600" />
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">Database</p>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
@@ -209,6 +208,7 @@ function SidebarContent({
 
 export default function AppLayoutNew({ children }: AppLayoutNewProps) {
   const { currentTab, setCurrentTab, systemHealth, systemStats, totalCVs, totalJDs } = useAppStore();
+  const { toasts, removeToast } = useToastStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const services = systemHealth?.services ?? {};
@@ -219,7 +219,7 @@ export default function AppLayoutNew({ children }: AppLayoutNewProps) {
       {/* ── Mobile top bar ──────────────────────────────────────────── */}
       <div className="fixed top-0 left-0 right-0 z-40 flex md:hidden items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#00529b' }}>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-brand-600">
             <Zap className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="font-bold text-sm tracking-tight text-gray-900">Alpha CV</span>
@@ -268,7 +268,7 @@ export default function AppLayoutNew({ children }: AppLayoutNewProps) {
       </AnimatePresence>
 
       {/* ── Desktop sidebar ────────────────────────────────────────── */}
-      <aside className="hidden md:flex w-64 flex-col bg-white border-r border-gray-200 shrink-0 overflow-y-auto">
+      <aside className="hidden md:flex w-64 flex-col bg-white border-r border-gray-200 shrink-0 overflow-y-auto" role="navigation" aria-label="Main navigation">
         <SidebarContent
           currentTab={currentTab}
           setCurrentTab={setCurrentTab}
@@ -281,7 +281,7 @@ export default function AppLayoutNew({ children }: AppLayoutNewProps) {
       </aside>
 
       {/* ── Main ───────────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto bg-gray-50 pt-14 md:pt-0">
+      <main className="flex-1 overflow-y-auto bg-gray-50 pt-14 md:pt-0" role="main" aria-label="Page content">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentTab}
@@ -303,23 +303,24 @@ export default function AppLayoutNew({ children }: AppLayoutNewProps) {
             key={id}
             onClick={() => setCurrentTab(id)}
             className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors min-w-0 ${
-              currentTab === id ? 'font-bold' : 'text-gray-400'
+              currentTab === id ? 'font-bold text-brand-600' : 'text-gray-400'
             }`}
-            style={currentTab === id ? { color: '#00529b' } : undefined}
           >
             <Icon className="w-5 h-5" />
             <span className="truncate">{label.split(' ')[0]}</span>
             {currentTab === id && (
               <motion.div
                 layoutId="mobileNavDot"
-                className="w-1 h-1 rounded-full mt-0.5"
-                style={{ background: '#00529b' }}
+                className="w-1 h-1 rounded-full mt-0.5 bg-brand-600"
                 transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               />
             )}
           </button>
         ))}
       </nav>
+
+      {/* ── Global toasts ──────────────────────────────────────────── */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 }

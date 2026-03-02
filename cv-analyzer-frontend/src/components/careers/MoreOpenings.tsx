@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 import React, { useEffect, useState } from 'react';
 import {
   MapPin,
@@ -40,8 +41,8 @@ export default function MoreOpenings({ currentJobToken }: MoreOpeningsProps) {
         
         // Take only the first 5
         setRecentJobs(filteredJobs.slice(0, 5));
-      } catch (err: any) {
-        console.error('Failed to fetch recent jobs:', err);
+      } catch (err: unknown) {
+        logger.error('Failed to fetch recent jobs:', err);
         setError('Failed to load recent job openings');
       } finally {
         setIsLoading(false);

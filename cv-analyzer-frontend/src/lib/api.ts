@@ -560,11 +560,11 @@ class ApiClient {
     try {
       const response = await this.client.get<PublicJobView>(`/api/careers/jobs/${token}`);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get public job:', error);
 
       // If it's a 404 error, throw a more specific error
-      if (error.response?.status === 404) {
+      if ((error as { response?: { status?: number } }).response?.status === 404) {
         throw new Error('Job not found or no longer available');
       }
 
@@ -577,7 +577,7 @@ class ApiClient {
     try {
       const response = await this.client.get<JobPostingListItem[]>(`/api/careers/jobs/recent?limit=${limit}`);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get recent job postings:', error);
       throw error;
     }

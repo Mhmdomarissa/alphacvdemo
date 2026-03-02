@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import React, { useState, useEffect } from 'react';
 import {
     MessageSquare, Trash2, Send, Clock, User
@@ -32,7 +33,7 @@ export function NotesModal({ cvId, cvName, onClose }: NotesModalProps) {
                 const response = await api.getNotes(cvId);
                 setNotes(response.notes || []);
             } catch (err) {
-                console.error('Failed to load notes', err);
+                logger.error('Failed to load notes', err);
             } finally {
                 setLoading(false);
             }
@@ -57,7 +58,7 @@ export function NotesModal({ cvId, cvName, onClose }: NotesModalProps) {
             setNotes(response.notes || []);
             setNewNote('');
         } catch (err) {
-            console.error('Failed to save note', err);
+            logger.error('Failed to save note', err);
         } finally {
             setIsSubmitting(false);
         }
@@ -72,7 +73,7 @@ export function NotesModal({ cvId, cvName, onClose }: NotesModalProps) {
             const response = await api.getNotes(cvId);
             setNotes(response.notes || []);
         } catch (err) {
-            console.error('Failed to delete note', err);
+            logger.error('Failed to delete note', err);
         }
     };
 

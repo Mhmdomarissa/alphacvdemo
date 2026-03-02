@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 
 import React, { useState } from 'react';
 import { 
@@ -66,7 +67,7 @@ export default function ReportGenerator() {
       URL.revokeObjectURL(url);
       
     } catch (error) {
-      console.error('Report generation failed:', error);
+      logger.error('Report generation failed:', error);
     } finally {
       setIsGenerating(false);
     }

@@ -18,12 +18,14 @@ import {
   Clock,
   Briefcase,
   Activity,
+  BarChart3,
 } from 'lucide-react';
 import { useAppStore } from '@/stores/appStore';
 import { CandidateBreakdown, AssignmentItem } from '@/lib/types';
 import { AnimatedScoreRing } from '@/components/ui/AnimatedScoreRing';
 import { AnimatedProgress } from '@/components/ui/AnimatedProgress';
 import { SpotlightCard } from '@/components/ui/SpotlightCard';
+import { EmptyState } from '@/components/common/EmptyState';
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 function pct(n: number) {
@@ -181,7 +183,7 @@ function CandidateCard({ candidate, rank, defaultOpen, index }: { candidate: Can
               className="px-4 py-4"
             >
               <p className="text-xs font-semibold text-gray-500 flex items-center gap-1.5 mb-2">
-                <Activity className="w-3.5 h-3.5" style={{color:'#00529b'}} />
+                <Activity className="w-3.5 h-3.5 text-brand-600" />
                 AI Assessment
               </p>
               <p className="text-sm text-gray-700 leading-relaxed bg-blue-50 rounded-lg p-3 border border-blue-100">
@@ -320,9 +322,10 @@ function WeightSlider({
         step={1}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-1.5 appearance-none rounded-full cursor-pointer"
+        aria-label={`${label} weight`}
+        className="w-full h-1.5 appearance-none rounded-full cursor-pointer accent-brand-600"
         style={{
-          background: `linear-gradient(to right, #00529b ${value}%, #e5e7eb ${value}%)`,
+          background: `linear-gradient(to right, rgb(var(--color-brand-600, 0 82 155)) ${value}%, #e5e7eb ${value}%)`,
         }}
       />
     </div>
@@ -350,8 +353,8 @@ function ProgressOverlay() {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
       <div className="bg-white border border-gray-200 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{background:'#eff6ff'}}>
-            <Loader2 className="w-5 h-5 animate-spin" style={{color:'#00529b'}} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-brand-50">
+            <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-900">Matching in progress</p>
@@ -360,8 +363,8 @@ function ProgressOverlay() {
         </div>
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-2">
           <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${pct}%`, background:'#00529b' }}
+            className="h-full rounded-full transition-all duration-500 bg-brand-600"
+            style={{ width: `${pct}%` }}
           />
         </div>
         <div className="flex justify-between text-xs text-gray-400">
@@ -441,7 +444,7 @@ export default function MatchingPageNew() {
           className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm"
         >
           <p className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-            <FileText className="w-4 h-4" style={{color:'#00529b'}} />
+            <FileText className="w-4 h-4 text-brand-600" />
             1. Select Job Description
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -451,10 +454,9 @@ export default function MatchingPageNew() {
                 onClick={() => { selectJD(jd.id); clearMatchResult(); }}
                 className={`text-left px-3 py-3 rounded-lg border text-sm transition-all ${
                   selectedJD === jd.id
-                    ? 'text-white'
+                    ? 'text-white bg-brand-600 border-brand-600'
                     : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300 hover:bg-white'
                 }`}
-                style={selectedJD === jd.id ? {background:'#00529b', borderColor:'#00529b'} : undefined}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -479,7 +481,7 @@ export default function MatchingPageNew() {
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
             <p className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4" style={{color:'#00529b'}} />
+              <SlidersHorizontal className="w-4 h-4 text-brand-600" />
               2. Configure Match Weights
             </p>
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
@@ -541,9 +543,8 @@ export default function MatchingPageNew() {
           className={`w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-sm font-bold transition-all ${
             !selectedJD || isRunning
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-              : 'text-white shadow-md hover:opacity-90'
+              : 'text-white bg-brand-600 shadow-md hover:bg-brand-700'
           }`}
-          style={(!selectedJD || isRunning) ? undefined : {background:'#00529b'}}
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
@@ -569,6 +570,15 @@ export default function MatchingPageNew() {
             <AlertCircle className="w-4 h-4 shrink-0" />
             {loadingStates.matching.error}
           </div>
+        )}
+
+        {/* ── Empty prompt ─────────────────────────────────────────── */}
+        {!matchResult && !isRunning && !loadingStates.matching.error && (
+          <EmptyState
+            icon={BarChart3}
+            title="No match results yet"
+            description="Select a job description, adjust weights, and run a match to see ranked candidates."
+          />
         )}
 
         {/* ── Results ──────────────────────────────────────────────── */}
@@ -597,6 +607,7 @@ export default function MatchingPageNew() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  aria-label="Sort results by"
                   className="text-xs bg-white border border-gray-200 text-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:border-blue-400"
                 >
                   <option value="overall">Overall</option>
@@ -612,8 +623,7 @@ export default function MatchingPageNew() {
                 initial={{ opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="rounded-xl border border-blue-200 p-4"
-                style={{background:'#eff6ff'}}
+                className="rounded-xl border border-blue-200 p-4 bg-brand-50"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <motion.div

@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -117,7 +118,7 @@ const PerformanceDashboard: React.FC = () => {
       setPerformanceData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch performance data');
-      console.error('Performance data fetch error:', err);
+      logger.error('Performance data fetch error:', err);
     } finally {
       setLoading(false);
     }

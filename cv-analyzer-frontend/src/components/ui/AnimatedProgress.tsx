@@ -14,7 +14,7 @@ interface AnimatedProgressProps {
 /** Score bar that animates its width on scroll into view. */
 export function AnimatedProgress({
   value,
-  color = '#00529b',
+  color = 'var(--color-brand-600, #00529b)',
   bgColor = '#e5e7eb',
   height = 6,
   className = '',

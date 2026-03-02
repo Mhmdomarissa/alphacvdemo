@@ -42,7 +42,7 @@ function PdfPanel({ filename, onClose }: { filename: string; onClose: () => void
         className="w-full h-full sm:max-w-2xl bg-white sm:border-l border-gray-200 flex flex-col shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0" style={{background:'#00529b'}}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0 bg-brand-600">
           <div className="flex items-center gap-2 min-w-0">
             <FileText className="w-4 h-4 text-white/80 shrink-0" />
             <span className="text-sm text-white truncate font-medium">{filename}</span>
@@ -91,10 +91,7 @@ function CVCard({ cv, onPreview, index }: { cv: CVListItem; onPreview: (f: strin
           </div>
           <motion.button
             onClick={() => onPreview(cv.filename)}
-            className="ml-2 p-1.5 text-gray-400 hover:text-white rounded-lg transition-all shrink-0 opacity-0 group-hover:opacity-100"
-            style={{} as React.CSSProperties}
-            onMouseEnter={e => (e.currentTarget.style.background = '#00529b')}
-            onMouseLeave={e => (e.currentTarget.style.background = '')}
+            className="ml-2 p-1.5 text-gray-400 hover:text-white hover:bg-brand-600 rounded-lg transition-all shrink-0 opacity-0 group-hover:opacity-100"
             whileTap={{ scale: 0.9 }}
             title="Preview PDF"
           >
@@ -188,8 +185,7 @@ function JDCard({ jd, expanded, onToggle, index }: { jd: JDListItem; expanded: b
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.03 }}
-                      className="text-xs px-2 py-0.5 rounded border"
-                      style={{background:'#eff6ff',color:'#00529b',borderColor:'#dbeafe'}}
+                      className="text-xs px-2 py-0.5 rounded border bg-brand-50 text-brand-600 border-brand-200"
                     >
                       {s}
                     </motion.span>
@@ -265,10 +261,10 @@ export default function DatabasePageNew() {
           <div className="flex gap-1 bg-gray-100 p-1 rounded-lg flex-1 max-w-xs">
             <button
               onClick={() => setDatabaseActiveTab('cvs')}
+              aria-label="Show CVs tab"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex-1 justify-center ${
-                databaseActiveTab === 'cvs' ? 'text-white' : 'text-gray-500 hover:text-gray-800'
+                databaseActiveTab === 'cvs' ? 'text-white bg-brand-600' : 'text-gray-500 hover:text-gray-800'
               }`}
-              style={databaseActiveTab === 'cvs' ? {background:'#00529b'} : undefined}
             >
               <Users className="w-3.5 h-3.5" />
               CVs
@@ -278,10 +274,10 @@ export default function DatabasePageNew() {
             </button>
             <button
               onClick={() => setDatabaseActiveTab('jds')}
+              aria-label="Show JDs tab"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex-1 justify-center ${
-                databaseActiveTab === 'jds' ? 'text-white' : 'text-gray-500 hover:text-gray-800'
+                databaseActiveTab === 'jds' ? 'text-white bg-brand-600' : 'text-gray-500 hover:text-gray-800'
               }`}
-              style={databaseActiveTab === 'jds' ? {background:'#00529b'} : undefined}
             >
               <FileText className="w-3.5 h-3.5" />
               JDs
@@ -295,17 +291,17 @@ export default function DatabasePageNew() {
           <div className="flex items-center gap-1 ml-auto">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded ${ viewMode === 'grid' ? 'text-white' : 'text-gray-400 hover:text-gray-700'}`}
-              style={viewMode === 'grid' ? {background:'#00529b'} : undefined}
+              className={`p-1.5 rounded ${ viewMode === 'grid' ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-gray-700'}`}
               title="Grid view"
+              aria-label="Grid view"
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded ${ viewMode === 'list' ? 'text-white' : 'text-gray-400 hover:text-gray-700'}`}
-              style={viewMode === 'list' ? {background:'#00529b'} : undefined}
+              className={`p-1.5 rounded ${ viewMode === 'list' ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-gray-700'}`}
               title="List view"
+              aria-label="List view"
             >
               <List className="w-4 h-4" />
             </button>
@@ -320,13 +316,11 @@ export default function DatabasePageNew() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={databaseActiveTab === 'cvs' ? 'Search by name, title or skill…' : 'Search by title or skill…'}
-            className="w-full pl-9 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none transition-colors"
-            style={{}} 
-            onFocus={e => (e.currentTarget.style.borderColor = '#00529b')}
-            onBlur={e => (e.currentTarget.style.borderColor = '')}
+            aria-label="Search database"
+            className="w-full pl-9 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-brand-600 transition-colors"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label="Clear search">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -354,10 +348,9 @@ export default function DatabasePageNew() {
                     onClick={() => setSkillFilter(skillFilter === skill ? '' : skill)}
                     className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                       skillFilter === skill
-                        ? 'text-white border-transparent'
+                        ? 'text-white border-transparent bg-brand-600'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
                     }`}
-                    style={skillFilter === skill ? {background:'#00529b'} : undefined}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -389,10 +382,11 @@ export default function DatabasePageNew() {
               ))}
             </div>
             {filteredCVs.length === 0 && (
-              <div className="text-center py-16 text-gray-400">
-                <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No CVs match your filter.</p>
-              </div>
+              <EmptyState
+                icon={Users}
+                title="No CVs match your filter"
+                description="Try adjusting your search or clearing filters."
+              />
             )}
           </motion.div>
         )}
@@ -421,10 +415,11 @@ export default function DatabasePageNew() {
               ))}
             </div>
             {filteredJDs.length === 0 && (
-              <div className="text-center py-16 text-gray-400">
-                <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No job descriptions match your search.</p>
-              </div>
+              <EmptyState
+                icon={FileText}
+                title="No job descriptions match your search"
+                description="Try a different search term."
+              />
             )}
           </motion.div>
         )}
